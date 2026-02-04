@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="./output.css" rel="stylesheet">
+
+    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="flex relative w-full min-h-screen">
+        <div class="flex flex-col justify-between py-[50px] px-[70px] w-[580px] shrink-0 items-start">
+            <img src="assets/images/logos/logo.svg" class="flex shrink-0 h-[42px]" alt="logo">
+            <form action="my-courses.html" class="flex flex-col w-full my-7">
+                <h1 class="font-bold text-[28px] leading-[42px]">Sign In <br>as Student</h1>
+                <label class="flex flex-col gap-2 mt-[30px]">
+                    <p class="font-semibold">Email Address</p>
+                    <input type="email" name="" id="" class="appearance-none outline-hidden w-full bg-white rounded-full h-12 font-semibold placeholder:font-normal placeholder:text-lms-text-secondary py-3 px-6 input-focus" placeholder="Write your email">
+                </label>
+                <label class="flex flex-col gap-2 mt-6">
+                    <p class="font-semibold">Password</p>
+                    <div class="relative">
+                        <input type="password" name="" class="password-input appearance-none outline-hidden w-full bg-white rounded-full h-12 font-semibold placeholder:font-normal placeholder:text-lms-text-secondary py-3 px-6 pr-[50px] input-focus" placeholder="Input your password">
+                        <button type="button" class="password-btn absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 right-[14px]">
+                            <img id="hide-pass" src="assets/images/icons/eyeslash.svg" alt="icon">
+                            <img id="show-pass" src="assets/images/icons/eye.svg" class="hidden" alt="icon">
+                        </button>
+                    </div>
+                    <a href="#" class="text-sm leading-[21px] text-lms-text-secondary text-right hover:underline">Forgot my password</a>
+                </label>
+                <div class="flex flex-col gap-4 mt-[30px]">
+                    <button type="submit" class="w-full h-12 rounded-full py-3 px-6 gap-[10px] bg-lms-purple text-center">
+                        <span class="font-bold text-white">Sign In</span>
+                    </button>
+                    <p class="rounded-2xl p-4 gap-[10px] bg-lms-grey leading-[26px]">If you have a trouble while accessing the account, <br>kindly contact your admin company account.</p>
+                </div>
+            </form>
+            <ul class="flex gap-[30px]">
+                <li>
+                    <a href="#" class="text-sm leading-[21px] text-lms-text-secondary hover:underline">About</a>
+                </li>
+                <li>
+                    <a href="#" class="text-sm leading-[21px] text-lms-text-secondary hover:underline">Terms & Conditions</a>
+                </li>
+                <li>
+                    <a href="#" class="text-sm leading-[21px] text-lms-text-secondary hover:underline">Privacy Policy</a>
+                </li>
+            </ul>
+        </div>
+        <div class="flex h-screen w-full relative">
+            <div id="slider-arrow" class="fixed bottom-[59px] right-[50px] z-10 flex gap-4 w-fit">
+                <button id="prev">
+                    <img src="assets/images/icons/btn_arrow.svg" class="flex shrink-0" alt="icon">
+                </button>
+                <button id="next">
+                    <img src="assets/images/icons/btn_arrow.svg" class="flex shrink-0 rotate-180" alt="icon">
+                </button>
+            </div>
+            <div id="slider" class="fixed top-0 flex w-[calc(100%-580px)] h-screen overflow-hidden">
+                <div class="slide relative flex w-full h-full overflow-hidden">
+                    <img src="assets/images/thumbnails/login-slide-1.webp" class="w-full h-full object-cover object-top" alt="thumbnail">
+                    <div class="absolute bottom-0 flex flex-col w-full h-fit pl-[50px] pr-[45px] pt-[75px] pb-[50px] gap-[30px] text-white bg-[linear-gradient(180deg,rgba(14,22,38,0)_0%,#0E1626_93.64%)]">
+                        <p class="font-medium text-[26px] leading-10">Sebagai recruiter jadi lebih praktis ketika menganalisa perfomance learning dari setiap karyawan pada perusahaan kami.</p>
+                        <div class="w-fit">
+                            <p class="font-semibold text-xl leading-[30px]">Elina Mae</p>
+                            <p class="mt-1">Recruiter at Facebook</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide relative flex w-full h-full overflow-hidden hidden">
+                    <img src="assets/images/thumbnails/login-slide-2.webp" class="w-full h-full object-cover object-top" alt="thumbnail">
+                    <div class="absolute bottom-0 flex flex-col w-full h-fit pl-[50px] pr-[45px] pt-[75px] pb-[50px] gap-[30px] text-white bg-[linear-gradient(180deg,rgba(14,22,38,0)_0%,#0E1626_93.64%)]">
+                        <p class="font-medium text-[26px] leading-10">WFH semakin asik karena bisa catch up skills terbaru pada LMS AnggaCircle buatan oleh perusahaan tempat saya bekerja.</p>
+                        <div class="w-fit">
+                            <p class="font-semibold text-xl leading-[30px]">Yein Widada</p>
+                            <p class="mt-1">Engineer at BuildWithAngga</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide relative flex w-full h-full overflow-hidden hidden">
+                    <img src="assets/images/thumbnails/login-slide-3.webp" class="w-full h-full object-cover object-top" alt="thumbnail">
+                    <div class="absolute bottom-0 flex flex-col w-full h-fit pl-[50px] pr-[45px] pt-[75px] pb-[50px] gap-[30px] text-white bg-[linear-gradient(180deg,rgba(14,22,38,0)_0%,#0E1626_93.64%)]">
+                        <p class="font-medium text-[26px] leading-10">LMS AnggaCircle telah membantu saya jadi lebih produktif dalam menguasai skills penting dibutuhkan oleh perusahaan saya.</p>
+                        <div class="w-fit">
+                            <p class="font-semibold text-xl leading-[30px]">Shayna Max</p>
+                            <p class="mt-1">Employee at Google</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="wrong-pass-alert" class="fixed top-10 transform -translate-x-1/2 left-1/2 z-20 flex w-[600px] shrink-0 rounded-full justify-between items-center py-5 px-[30px] bg-lms-red">
+        <span class="font-semibold text-white">You entered wrong password. Please try again.</span>
+        <button type="button" id="close-alert" class="flex shrink-0">
+            <img src="assets/images/icons/closecircle.svg" alt="icon">
+        </button>
+    </div>
+    
+    <script src="assets/js/login.js"></script>
+</body>
+</html>
