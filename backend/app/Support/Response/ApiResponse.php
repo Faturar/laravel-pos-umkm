@@ -215,13 +215,14 @@ class ApiResponse
             'last_page' => $paginator->lastPage(),
             'from' => $paginator->firstItem(),
             'to' => $paginator->lastItem(),
+            'path' => $paginator->path(),
         ];
 
         $response = [
             'success' => true,
             'message' => $message,
             'data' => $paginator->items(),
-            'pagination' => $pagination,
+            'meta' => $pagination,
         ];
 
         return response()->json($response, $status, $headers);

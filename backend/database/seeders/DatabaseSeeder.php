@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,17 +22,20 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
         ]);
 
-        // Create default admin user
-        $admin = User::factory()->create([
-            'name' => 'Administrator',
-            'email' => 'admin@example.com',
-            'status' => 'active',
-        ]);
+        // Create or update default admin user
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Administrator',
+                'password' => Hash::make('admin123'),
+                'status' => 'active',
+            ]
+        );
 
         // Assign admin role to admin user
         $adminRole = \App\Models\Role::where('name', 'admin')->first();
         if ($adminRole) {
-            $admin->roles()->attach($adminRole->id);
+            $admin->roles()->sync([$adminRole->id]); // Use sync to avoid duplicates
         }
 
         // Create test users for each role
@@ -39,13 +43,15 @@ class DatabaseSeeder extends Seeder
         
         foreach ($roles as $role) {
             if ($role->name !== 'admin') {
-                $user = User::factory()->create([
-                    'name' => ucfirst($role->name) . ' User',
-                    'email' => $role->name . '@example.com',
-                    'status' => 'active',
-                ]);
+                $user = User::updateOrCreate(
+                    ['email' => $role->name . '@example.com'],
+                    [
+                        'name' => ucfirst($role->name) . ' User',
+                        'status' => 'active',
+                    ]
+                );
                 
-                $user->roles()->attach($role->id);
+                $user->roles()->sync([$role->id]); // Use sync to avoid duplicates
             }
         }
     }

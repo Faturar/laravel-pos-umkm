@@ -1,5 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HealthController;
 
-// API only - no web routes needed
+// Health check endpoint (public)
+Route::get('/health', [HealthController::class, 'index']);

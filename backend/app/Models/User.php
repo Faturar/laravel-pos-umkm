@@ -24,6 +24,8 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'status',
         'last_login_at',
+        'outlet_id',
+        'current_outlet_id',
     ];
 
     /**
@@ -48,6 +50,8 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
             'status' => 'string',
             'last_login_at' => 'datetime',
+            'outlet_id' => 'integer',
+            'current_outlet_id' => 'integer',
         ];
     }
 
