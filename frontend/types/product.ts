@@ -1,80 +1,103 @@
-export interface Category {
-  id: number
-  name: string
-  description?: string
-  created_at: string
-  updated_at: string
-}
-
-export interface Outlet {
-  id: number
-  name: string
-  address?: string
-  phone?: string
-  created_at: string
-  updated_at: string
-}
-
+// src/types/product.ts
 export interface Product {
   id: number
+
+  // Core info
   name: string
+  description?: string | null
   sku: string
-  barcode: string
-  description?: string
-  category_id: number
-  category?: Category
-  outlet_id: number
-  outlet?: Outlet
-  price: number
-  cost: number
-  stock: number
-  min_stock: number
-  unit: string
+  barcode?: string | null
+  image?: string | null
+
+  // Pricing
+  price: number // decimal:2 → number in TS
+  cost: number // decimal:2 → number in TS
+
+  // Stock
+  track_stock: boolean
+  stock_quantity: number
+  stock_alert_threshold: number
+
+  // Status
   is_active: boolean
-  has_variants: boolean
-  variants?: ProductVariant[]
-  image_url?: string
-  created_at: string
-  updated_at: string
+
+  // Relations (IDs)
+  category_id: number | null
+  outlet_id: number
+
+  // Optional populated relations (API dependent)
+  category?: {
+    id: number
+    name: string
+    description?: string | null
+    color?: string | null
+    is_active: boolean
+  }
+
+  outlet?: {
+    id: number
+    name: string
+    code: string
+    address?: string | null
+    phone?: string | null
+    email?: string | null
+    is_active: boolean
+    tax_rate: number
+    service_charge_rate: number
+  }
+
+  // Timestamps (if API returns them)
+  created_at?: string
+  updated_at?: string
+  deleted_at?: string | null
 }
 
+// Product Variant interface
 export interface ProductVariant {
   id: number
-  product_id: number
   name: string
-  sku: string
-  barcode: string
+  description?: string | null
   price: number
   cost: number
-  stock: number
-  min_stock: number
-  unit: string
+  sku: string
+  barcode?: string | null
   is_active: boolean
-  image_url?: string
-  created_at: string
-  updated_at: string
+  stock_quantity: number
+  stock_alert_threshold: number
+  product_id: number
+  product?: Product
+  created_at?: string
+  updated_at?: string
+  deleted_at?: string | null
 }
 
-export interface ProductApiResponse {
-  data: Product[]
-  message?: string
-  status: number
-  success: boolean
-}
-
-export interface SingleProductApiResponse {
-  data: Product
-  message?: string
-  status: number
-  success: boolean
-}
-
-export interface ProductQueryParams {
-  page?: number
-  per_page?: number
-  search?: string
-  category_id?: number
-  outlet_id?: number
-  sort_by?: string
-  sort_direction?: "asc" | "desc"
+// Stock Movement interface
+export interface StockMovement {
+  id: number
+  type: "in" | "out" | "adjustment"
+  quantity: number
+  before_quantity: number
+  after_quantity: number
+  notes?: string | null
+  product_id: number
+  product_variant_id?: number | null
+  transaction_id?: number | null
+  user_id: number
+  outlet_id: number
+  product?: Product
+  product_variant?: ProductVariant
+  transaction?: {
+    id: number
+    reference_number: string
+  }
+  user?: {
+    id: number
+    name: string
+  }
+  outlet?: {
+    id: number
+    name: string
+  }
+  created_at?: string
+  updated_at?: string
 }

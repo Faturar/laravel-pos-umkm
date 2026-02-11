@@ -80,6 +80,39 @@ class PermissionSeeder extends Seeder
             ['name' => 'update_settings', 'label' => 'Update Settings', 'group' => 'system'],
             ['name' => 'view_audit_logs', 'label' => 'View Audit Logs', 'group' => 'system'],
             ['name' => 'manage_system', 'label' => 'Manage System', 'group' => 'system'],
+            
+            // Product Management
+            ['name' => 'view_products', 'label' => 'View Products', 'group' => 'product'],
+            ['name' => 'create_products', 'label' => 'Create Products', 'group' => 'product'],
+            ['name' => 'edit_products', 'label' => 'Edit Products', 'group' => 'product'],
+            ['name' => 'delete_products', 'label' => 'Delete Products', 'group' => 'product'],
+            
+            // Category Management
+            ['name' => 'view_categories', 'label' => 'View Categories', 'group' => 'category'],
+            ['name' => 'create_categories', 'label' => 'Create Categories', 'group' => 'category'],
+            ['name' => 'edit_categories', 'label' => 'Edit Categories', 'group' => 'category'],
+            ['name' => 'delete_categories', 'label' => 'Delete Categories', 'group' => 'category'],
+            
+            // Stock Management
+            ['name' => 'view_stock', 'label' => 'View Stock', 'group' => 'stock'],
+            ['name' => 'manage_stock', 'label' => 'Manage Stock', 'group' => 'stock'],
+            
+            // Outlet Management
+            ['name' => 'view_outlets', 'label' => 'View Outlets', 'group' => 'outlet'],
+            ['name' => 'create_outlets', 'label' => 'Create Outlets', 'group' => 'outlet'],
+            ['name' => 'edit_outlets', 'label' => 'Edit Outlets', 'group' => 'outlet'],
+            ['name' => 'delete_outlets', 'label' => 'Delete Outlets', 'group' => 'outlet'],
+            ['name' => 'switch_outlets', 'label' => 'Switch Outlets', 'group' => 'outlet'],
+            
+            // Transaction Management
+            ['name' => 'view_transactions', 'label' => 'View Transactions', 'group' => 'transaction'],
+            ['name' => 'create_transactions', 'label' => 'Create Transactions', 'group' => 'transaction'],
+            ['name' => 'edit_transactions', 'label' => 'Edit Transactions', 'group' => 'transaction'],
+            ['name' => 'void_transactions', 'label' => 'Void Transactions', 'group' => 'transaction'],
+            ['name' => 'refund_transactions', 'label' => 'Refund Transactions', 'group' => 'transaction'],
+            
+            // Sync Management
+            ['name' => 'sync_data', 'label' => 'Sync Data', 'group' => 'sync'],
         ];
 
         // Insert permissions

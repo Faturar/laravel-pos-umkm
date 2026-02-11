@@ -38,7 +38,13 @@ class RoleSeeder extends Seeder
                     'view_employees', 'create_employees', 'update_employees', 'delete_employees', 'manage_employees',
                     'view_payroll', 'create_payroll', 'update_payroll', 'approve_payroll', 'manage_payroll',
                     'view_attendance', 'create_attendance', 'update_attendance', 'manage_attendance',
-                    'view_settings', 'update_settings', 'view_audit_logs', 'manage_system'
+                    'view_settings', 'update_settings', 'view_audit_logs', 'manage_system',
+                    'view_products', 'create_products', 'edit_products', 'delete_products',
+                    'view_categories', 'create_categories', 'edit_categories', 'delete_categories',
+                    'view_stock', 'manage_stock',
+                    'view_outlets', 'create_outlets', 'edit_outlets', 'delete_outlets', 'switch_outlets',
+                    'view_transactions', 'create_transactions', 'edit_transactions', 'void_transactions', 'refund_transactions',
+                    'sync_data'
                 ]
             ],
             
@@ -55,7 +61,13 @@ class RoleSeeder extends Seeder
                     'view_employees', 'update_employees', 'manage_employees',
                     'view_payroll', 'update_payroll', 'approve_payroll',
                     'view_attendance', 'update_attendance', 'manage_attendance',
-                    'view_settings'
+                    'view_settings',
+                    'view_products', 'edit_products',
+                    'view_categories', 'edit_categories',
+                    'view_stock', 'manage_stock',
+                    'view_outlets', 'edit_outlets', 'switch_outlets',
+                    'view_transactions', 'create_transactions', 'edit_transactions',
+                    'sync_data'
                 ]
             ],
             
@@ -66,7 +78,11 @@ class RoleSeeder extends Seeder
                 'description' => 'Cashier/POS access',
                 'permissions' => [
                     'view_orders', 'create_order', 'update_order',
-                    'view_reports', 'view_sales_report'
+                    'view_reports', 'view_sales_report',
+                    'view_products',
+                    'view_categories',
+                    'view_stock',
+                    'view_transactions', 'create_transactions'
                 ]
             ],
             

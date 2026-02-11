@@ -1,20 +1,101 @@
-@import "tailwindcss/preflight";
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-    --background: #ffffff;
-    --foreground: #171717;
-    --color-lms-purple: #493ef2;
-    --color-lms-red: #ff5d5d;
-    --color-lms-grey: #eceef1;
-    --color-lms-grey-border: #BCC2CA;
-    --color-lms-orange: #ff8100;
-    --color-lms-text-secondary: #5e677e;
-    --color-lms-background: #F5F7FA;
+/* ======================================================
+   DESIGN TOKENS (AgriDash DNA) — Tailwind v4
+   ====================================================== */
+@theme {
+  /* Colors */
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-foreground: #0C1C3C;
+  --color-muted: #F7F7F7;
+  --color-border: #DCDEDD;
+
+  /* Status */
+  --color-error: #EF4444;
+  --color-error-hover: #DC2626;
+
+  /* Radius */
+  --radius-card: 20px;
+  --radius-button: 16px;
+}
+
+/* ======================================================
+   BASE STYLES
+   ====================================================== */
+html {
+  overflow-y: scroll;
 }
 
 body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: Arial, Helvetica, sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--color-foreground);
+  background-color: var(--color-muted);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ======================================================
+   TYPOGRAPHY
+   ====================================================== */
+@layer base {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    color: var(--color-foreground);
+    font-weight: 700;
+  }
+
+  p {
+    line-height: 1.6;
+  }
+}
+
+/* ======================================================
+   FORM CONTROLS
+   ====================================================== */
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--color-primary);
+}
+
+/* ======================================================
+   BUTTON NORMALIZATION
+   ====================================================== */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ======================================================
+   CUSTOM UTILITIES
+   ====================================================== */
+@layer utilities {
+  .rounded-card {
+    border-radius: var(--radius-card);
+  }
+
+  .rounded-button {
+    border-radius: var(--radius-button);
+  }
 }
