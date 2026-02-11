@@ -19,6 +19,7 @@ use App\Http\Controllers\OutletController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\PaymentMethodController;
 
 /*
 |--------------------------------------------------------------------------
@@ -210,11 +211,20 @@ Route::group(['middleware' => [\App\Http\Middleware\JwtAuthenticate::class]], fu
         Route::get('/stocks', [StockController::class, 'index']);
         Route::get('/stocks/movements', [StockController::class, 'movements']);
         Route::get('/stocks/summary', [StockController::class, 'summary']);
+        
+        // Stock Movement Report routes
+        Route::get('/stock-movements', [StockController::class, 'movements']);
+        Route::get('/stock-movements/summary', [StockController::class, 'movementSummary']);
+        Route::get('/stock-movements/chart-data', [StockController::class, 'movementChartData']);
+        Route::get('/stock-movements/by-type', [StockController::class, 'movementByType']);
+        Route::get('/stock-movements/affected-products', [StockController::class, 'affectedProducts']);
+        Route::get('/stock-movements/{id}', [StockController::class, 'movementDetail']);
     });
     
     Route::group(['middleware' => [\App\Http\Middleware\CheckPermission::class . ':manage_stock']], function () {
         Route::post('/stocks/in', [StockController::class, 'stockIn']);
         Route::post('/stocks/adjust', [StockController::class, 'adjust']);
+        Route::post('/stock-movements/adjustment', [StockController::class, 'stockAdjustment']);
     });
     
     // Outlet management routes
@@ -257,6 +267,25 @@ Route::group(['middleware' => [\App\Http\Middleware\JwtAuthenticate::class]], fu
         Route::put('/settings/{id}', [SettingController::class, 'update']);
         Route::post('/settings/bulk-update', [SettingController::class, 'bulkUpdate']);
         Route::post('/settings/{id}/reset', [SettingController::class, 'reset']);
+    });
+    
+    // Payment Method management routes
+    Route::group(['middleware' => [\App\Http\Middleware\CheckPermission::class . ':view_payment_methods']], function () {
+        Route::get('/payment-methods', [PaymentMethodController::class, 'index']);
+        Route::get('/payment-methods/{id}', [PaymentMethodController::class, 'show']);
+        Route::get('/payment-methods/summary', [PaymentMethodController::class, 'summary']);
+    });
+    
+    Route::group(['middleware' => [\App\Http\Middleware\CheckPermission::class . ':create_payment_methods']], function () {
+        Route::post('/payment-methods', [PaymentMethodController::class, 'store']);
+    });
+    
+    Route::group(['middleware' => [\App\Http\Middleware\CheckPermission::class . ':edit_payment_methods']], function () {
+        Route::put('/payment-methods/{id}', [PaymentMethodController::class, 'update']);
+    });
+    
+    Route::group(['middleware' => [\App\Http\Middleware\CheckPermission::class . ':delete_payment_methods']], function () {
+        Route::delete('/payment-methods/{id}', [PaymentMethodController::class, 'destroy']);
     });
     
     // Health & Security routes

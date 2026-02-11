@@ -110,9 +110,9 @@ export function InventoryDataTable<T>({
         <table className="w-full">
           <thead className="bg-muted">
             <tr>
-              {columns.map((col) => (
+              {columns.map((col, index) => (
                 <th
-                  key={String(col.accessorKey)}
+                  key={`${String(col.accessorKey)}-${index}`}
                   className="px-6 py-4 text-left text-sm text-gray-500"
                 >
                   {col.header}
@@ -124,8 +124,11 @@ export function InventoryDataTable<T>({
           <tbody>
             {data.map((row, i) => (
               <tr key={i} className="border-b border-gray-100">
-                {columns.map((col) => (
-                  <td key={String(col.accessorKey)} className="px-6 py-4">
+                {columns.map((col, j) => (
+                  <td
+                    key={`${String(col.accessorKey)}-${i}-${j}`} // new key here
+                    className="px-6 py-4"
+                  >
                     {col.cell ? col.cell(row) : String(row[col.accessorKey])}
                   </td>
                 ))}

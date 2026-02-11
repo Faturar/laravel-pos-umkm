@@ -1,459 +1,316 @@
 "use client"
 
-import { useState } from "react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/Card"
-import { DataTable } from "@/components/ui/DataTable"
+import { useState, useEffect } from "react"
+import { Card } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
-import { DateRangeSelect } from "@/components/ui/DateRangeSelect"
-import { OutletSelect } from "@/components/ui/OutletSelect"
+import { Input } from "@/components/ui/Input"
+import { Label } from "@/components/ui/Label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select"
 import { PageHeader } from "@/components/dashboard/PageHeader"
-import { StatCard } from "@/components/dashboard/StatCard"
-import { ChartCard } from "@/components/dashboard/ChartCard"
-import { salesReportTransactionColumns } from "./columns"
-import { Transaction } from "@/types/transaction"
+import { DataTable } from "@/components/ui/DataTable"
+import { reportService } from "@/lib/api/report"
+import { SalesSummary, ReportFilters } from "@/lib/api/report"
+import { Download, Calendar, Filter } from "lucide-react"
 
-export default function SalesReportPage() {
-  const [dateRange, setDateRange] = useState("this_month")
-  const [selectedOutlet, setSelectedOutlet] = useState("all")
-  const [chartView, setChartView] = useState("sales")
+// Simple date formatting function
+const formatDate = (date: Date, formatStr: string): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
 
-  // Sales report stats data
-  const salesReportStats = {
-    totalSales: 12450000,
-    totalTransactions: 892,
-    averageOrderValue: 13957,
-    netRevenue: 12100000,
-    salesChange: 15.2,
-    transactionsChange: 12.8,
-    aovChange: 2.1,
-    revenueChange: 14.5,
+  if (formatStr === "yyyy-MM-dd") {
+    return `${year}-${month}-${day}`
+  } else if (formatStr === "MMM dd, yyyy") {
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ]
+    return `${monthNames[date.getMonth()]} ${day}, ${year}`
   }
 
-  // Sample transaction data
-  const transactions: Transaction[] = [
-    {
-      id: 1,
-      uuid: "550e8400-e29b-41d4-a716-446655440000",
-      invoice_number: "INV-20240201-0001",
-      subtotal: 45000,
-      discount_amount: 0,
-      tax_amount: 4500,
-      service_charge_amount: 0,
-      total_amount: 49500,
-      final_amount: 49500,
-      paid_amount: 50000,
-      change_amount: 500,
-      payment_method: "Cash",
-      payment_reference: "",
-      notes: "",
-      status: "completed",
-      is_void: false,
-      is_refund: false,
-      void_reason: "",
-      refund_reason: "",
-      is_synced: true,
-      cashier_id: 1,
-      customer_id: 1,
-      outlet_id: 1,
-      created_at: "2024-02-01T08:30:00.000000Z",
-      updated_at: "2024-02-01T08:30:00.000000Z",
-    },
-    {
-      id: 2,
-      uuid: "550e8400-e29b-41d4-a716-446655440001",
-      invoice_number: "INV-20240201-0002",
-      subtotal: 75000,
-      discount_amount: 7500,
-      tax_amount: 6750,
-      service_charge_amount: 0,
-      total_amount: 74250,
-      final_amount: 74250,
-      paid_amount: 74250,
-      change_amount: 0,
-      payment_method: "QRIS",
-      payment_reference: "QR123456789",
-      notes: "",
-      status: "completed",
-      is_void: false,
-      is_refund: false,
-      void_reason: "",
-      refund_reason: "",
-      is_synced: true,
-      cashier_id: 1,
-      customer_id: undefined,
-      outlet_id: 1,
-      created_at: "2024-02-01T09:15:00.000000Z",
-      updated_at: "2024-02-01T09:15:00.000000Z",
-    },
-    {
-      id: 3,
-      uuid: "550e8400-e29b-41d4-a716-446655440002",
-      invoice_number: "INV-20240201-0003",
-      subtotal: 120000,
-      discount_amount: 0,
-      tax_amount: 12000,
-      service_charge_amount: 5000,
-      total_amount: 137000,
-      final_amount: 137000,
-      paid_amount: 137000,
-      change_amount: 0,
-      payment_method: "E-Wallet",
-      payment_reference: "EW987654321",
-      notes: "",
-      status: "completed",
-      is_void: false,
-      is_refund: false,
-      void_reason: "",
-      refund_reason: "",
-      is_synced: true,
-      cashier_id: 2,
-      customer_id: 2,
-      outlet_id: 1,
-      created_at: "2024-02-01T10:45:00.000000Z",
-      updated_at: "2024-02-01T10:45:00.000000Z",
-    },
-  ]
+  return `${year}-${month}-${day}`
+}
 
-  // Payment method breakdown data
-  const paymentMethodBreakdown = [
-    { name: "Cash", amount: 6200000, percentage: 49.8, transactions: 444 },
-    { name: "QRIS", amount: 3950000, percentage: 31.7, transactions: 283 },
-    { name: "E-Wallet", amount: 1800000, percentage: 14.5, transactions: 129 },
-    { name: "Card", amount: 500000, percentage: 4.0, transactions: 36 },
-  ]
+// Simple date subtraction function
+const subDays = (date: Date, days: number): Date => {
+  const result = new Date(date)
+  result.setDate(result.getDate() - days)
+  return result
+}
 
-  // Best selling products data
-  const bestSellingProducts = [
-    { name: "Nasi Goreng Special", quantity: 245, revenue: 3675000 },
-    { name: "Ayam Penyet", quantity: 198, revenue: 2970000 },
-    { name: "Sate Ayam", quantity: 156, revenue: 2340000 },
-    { name: "Mie Goreng", quantity: 142, revenue: 2130000 },
-    { name: "Bakso", quantity: 128, revenue: 1920000 },
-    { name: "Gado-Gado", quantity: 98, revenue: 1470000 },
-    { name: "Soto Ayam", quantity: 85, revenue: 1275000 },
-    { name: "Rendang", quantity: 72, revenue: 1080000 },
+export default function SalesReportPage() {
+  const [loading, setLoading] = useState(true)
+  const [salesData, setSalesData] = useState<SalesSummary[]>([])
+  const [filters, setFilters] = useState<ReportFilters>({
+    date_from: formatDate(subDays(new Date(), 30), "yyyy-MM-dd"),
+    date_to: formatDate(new Date(), "yyyy-MM-dd"),
+  })
+  const [meta, setMeta] = useState({
+    page: 1,
+    per_page: 10,
+    total: 0,
+    total_pages: 1,
+  })
+  const [outlets, setOutlets] = useState<{ id: number; name: string }[]>([])
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>(
+    [],
+  )
+  const [paymentMethods, setPaymentMethods] = useState<
+    { id: number; name: string }[]
+  >([])
+
+  useEffect(() => {
+    fetchSalesData()
+    fetchReferenceData()
+  }, [filters])
+
+  const fetchSalesData = async () => {
+    try {
+      setLoading(true)
+      const response = await reportService.getSalesSummary(filters)
+      setSalesData(response.data)
+    } catch (error) {
+      console.error("Error fetching sales data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchReferenceData = async () => {
+    try {
+      // Fetch outlets, categories, and payment methods for filters
+      // This would typically be done through their respective services
+      // For now, we'll use empty arrays
+    } catch (error) {
+      console.error("Error fetching reference data:", error)
+    }
+  }
+
+  const handleFilterChange = (
+    key: keyof ReportFilters,
+    value: string | number,
+  ) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  const exportReport = async (format: "csv" | "xlsx" | "pdf" = "csv") => {
+    try {
+      const blob = await reportService.exportReport(
+        "sales-summary",
+        filters,
+        format,
+      )
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `sales-report-${format === "csv" ? "data" : format}.${format}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error("Error exporting report:", error)
+    }
+  }
+
+  const columns = [
+    {
+      header: "Date",
+      accessorKey: "date",
+      cell: (row: SalesSummary) =>
+        row.date ? formatDate(new Date(row.date), "MMM dd, yyyy") : "-",
+    },
+    {
+      header: "Total Sales",
+      accessorKey: "total_sales",
+      cell: (row: SalesSummary) =>
+        `Rp ${row.total_sales?.toLocaleString() || 0}`,
+    },
+    {
+      header: "Transactions",
+      accessorKey: "total_transactions",
+      cell: (row: SalesSummary) => row.total_transactions || 0,
+    },
+    {
+      header: "Avg. Transaction",
+      accessorKey: "average_transaction_value",
+      cell: (row: SalesSummary) =>
+        `Rp ${row.average_transaction_value?.toLocaleString() || 0}`,
+    },
   ]
 
   return (
-    <div>
-      {/* Page Header */}
-      <div className="mb-8">
-        <PageHeader
-          title="Sales Report"
-          description="Sales Performance Overview"
-          rightSlot={
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <DateRangeSelect value={dateRange} onChange={setDateRange} />
-                <OutletSelect
-                  value={selectedOutlet}
-                  onChange={setSelectedOutlet}
-                />
-              </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Sales Report"
+        description="View sales performance and trends"
+        rightSlot={
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportReport("csv")}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportReport("xlsx")}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export Excel
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportReport("pdf")}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+          </div>
+        }
+      />
 
-              <Button className="bg-primary hover:bg-primary-hover text-white rounded-button">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-                Export
-              </Button>
-            </div>
-          }
-        />
-      </div>
-
-      {/* KPI Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Total Sales"
-          value={`Rp ${salesReportStats.totalSales.toLocaleString("id-ID")}`}
-          subtitle={`${salesReportStats.salesChange > 0 ? "+" : ""}${salesReportStats.salesChange}%`}
-          subtitleColor={salesReportStats.salesChange > 0 ? "success" : "error"}
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          }
-        />
-
-        <StatCard
-          title="Total Transactions"
-          value={salesReportStats.totalTransactions.toString()}
-          subtitle={`${salesReportStats.transactionsChange > 0 ? "+" : ""}${salesReportStats.transactionsChange}%`}
-          subtitleColor={
-            salesReportStats.transactionsChange > 0 ? "success" : "error"
-          }
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
-          }
-        />
-
-        <StatCard
-          title="Average Order Value"
-          value={`Rp ${salesReportStats.averageOrderValue.toLocaleString("id-ID")}`}
-          subtitle={`${salesReportStats.aovChange > 0 ? "+" : ""}${salesReportStats.aovChange}%`}
-          subtitleColor={salesReportStats.aovChange > 0 ? "success" : "error"}
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
-            </svg>
-          }
-        />
-
-        <StatCard
-          title="Net Revenue"
-          value={`Rp ${salesReportStats.netRevenue.toLocaleString("id-ID")}`}
-          subtitle={`${salesReportStats.revenueChange > 0 ? "+" : ""}${salesReportStats.revenueChange}%`}
-          subtitleColor={
-            salesReportStats.revenueChange > 0 ? "success" : "error"
-          }
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-          }
-        />
-      </div>
-
-      {/* Main Sales Chart */}
-      <div className="mb-8">
-        <ChartCard title="Sales Performance" description="Daily sales trends">
-          <div className="flex space-x-2 mb-4">
-            <button
-              onClick={() => setChartView("sales")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-button transition-colors ${
-                chartView === "sales"
-                  ? "bg-primary text-white"
-                  : "bg-background text-foreground hover:bg-muted"
-              }`}
-            >
-              Sales
-            </button>
-            <button
-              onClick={() => setChartView("transactions")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-button transition-colors ${
-                chartView === "transactions"
-                  ? "bg-primary text-white"
-                  : "bg-background text-foreground hover:bg-muted"
-              }`}
-            >
-              Transactions
-            </button>
-            <button
-              onClick={() => setChartView("revenue")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-button transition-colors ${
-                chartView === "revenue"
-                  ? "bg-primary text-white"
-                  : "bg-background text-foreground hover:bg-muted"
-              }`}
-            >
-              Revenue
-            </button>
+      {/* Filters */}
+      <Card>
+        <div className="p-6">
+          <div className="flex items-center mb-4">
+            <Filter className="h-5 w-5 mr-2" />
+            <h3 className="text-lg font-semibold">Filters</h3>
           </div>
 
-          <div className="h-80 flex items-center justify-center bg-background rounded-card border border-border">
-            <div className="text-center text-muted-foreground">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-16 w-16 mx-auto text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="dateFrom">Date From</Label>
+              <Input
+                id="dateFrom"
+                type="date"
+                value={filters.date_from}
+                onChange={(e) =>
+                  handleFilterChange("date_from", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dateTo">Date To</Label>
+              <Input
+                id="dateTo"
+                type="date"
+                value={filters.date_to}
+                onChange={(e) => handleFilterChange("date_to", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="outlet">Outlet</Label>
+              <Select
+                value={filters.outlet_id?.toString() || ""}
+                onValueChange={(value) =>
+                  handleFilterChange("outlet_id", value ? parseInt(value) : "")
+                }
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-              <p className="mt-2 text-sm text-gray-500">
-                Sales Performance Chart
+                <SelectTrigger>
+                  <SelectValue placeholder="All Outlets" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Outlets</SelectItem>
+                  {outlets.map((outlet) => (
+                    <SelectItem key={outlet.id} value={outlet.id.toString()}>
+                      {outlet.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select
+                value={filters.category_id?.toString() || ""}
+                onValueChange={(value) =>
+                  handleFilterChange(
+                    "category_id",
+                    value ? parseInt(value) : "",
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem
+                      key={category.id}
+                      value={category.id.toString()}
+                    >
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Sales Summary Table */}
+      <Card>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Sales Summary</h3>
+
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div>Loading sales data...</div>
+            </div>
+          ) : (
+            <DataTable columns={columns} data={salesData} meta={meta} />
+          )}
+        </div>
+      </Card>
+
+      {/* Sales Chart */}
+      <Card>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Sales Trend</h3>
+          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+              <p className="text-gray-500">
+                Sales chart will be displayed here
               </p>
-              <p className="text-xs text-gray-400">
-                Displaying {chartView} data
+              <p className="text-sm text-gray-400 mt-1">
+                Integration with chart library needed
               </p>
             </div>
           </div>
-        </ChartCard>
-      </div>
-
-      {/* Breakdown Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-        {/* Payment Method Breakdown */}
-        <section className="bg-white rounded-card p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-foreground">
-              Payment Method Breakdown
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Distribution of payment methods
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {paymentMethodBreakdown.map((method) => (
-              <div key={method.name}>
-                {/* Header */}
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-foreground">
-                    {method.name}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {method.percentage}%
-                  </span>
-                </div>
-
-                {/* Progress */}
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${method.percentage}%` }}
-                  />
-                </div>
-
-                {/* Meta */}
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>{method.transactions} transactions</span>
-                  <span>Rp {method.amount.toLocaleString("id-ID")}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Best Selling Products & Combos */}
-        <section className="bg-white rounded-card p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-foreground">
-              Best Selling Products & Combos
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Top performing items
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {bestSellingProducts.map((product, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center">
-                  {/* Rank */}
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                    <span className="text-xs font-semibold text-primary">
-                      {index + 1}
-                    </span>
-                  </div>
-
-                  {/* Info */}
-                  <div>
-                    <p className="font-medium text-sm text-foreground">
-                      {product.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {product.quantity} sold
-                    </p>
-                  </div>
-                </div>
-
-                {/* Revenue */}
-                <p className="font-medium text-sm text-foreground">
-                  Rp {product.revenue.toLocaleString("id-ID")}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      {/* Detailed Transactions */}
-      <section className="mt-10 bg-white p-6">
-        {/* Header */}
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-foreground">
-            Transactions
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Detailed transaction records
-          </p>
         </div>
-
-        {/* Table Container */}
-        <div className="bg-bakground rounded-card border border-border">
-          <DataTable
-            columns={salesReportTransactionColumns}
-            data={transactions}
-            meta={{
-              page: 1,
-              per_page: 10,
-              total: transactions.length,
-              total_pages: 1,
-            }}
-          />
-        </div>
-      </section>
+      </Card>
     </div>
   )
 }

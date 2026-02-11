@@ -3,7 +3,13 @@
 import Link from "next/link"
 import { PageHeader } from "@/components/dashboard/PageHeader"
 import { Card } from "@/components/ui/Card"
-import { BarChart3, Package, CreditCard, Wallet } from "lucide-react"
+import {
+  BarChart3,
+  Package,
+  CreditCard,
+  Wallet,
+  TrendingUp,
+} from "lucide-react"
 
 export default function ReportsPage() {
   const reports = [
@@ -34,6 +40,13 @@ export default function ReportsPage() {
       href: "/reports/cash-flow",
       icon: Wallet,
       iconBg: "bg-muted",
+    },
+    {
+      title: "Stock Movement Report",
+      description: "Inventory changes and stock activity over time",
+      href: "/reports/stock-movement",
+      icon: TrendingUp,
+      iconBg: "bg-accent-blue",
     },
   ]
 

@@ -1,295 +1,308 @@
-import { PageHeader } from "@/components/dashboard/PageHeader"
+"use client"
+
+import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
+import { Card } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
-import {
-  Copy,
-  Receipt,
-  Package,
-  Warehouse,
-  CreditCard,
-  RotateCcw,
-  Ban,
-  Printer,
-  AlertTriangle,
-  Notebook,
-} from "lucide-react"
-
-/* ================= MOCK DATA ================= */
-
-const transaction = {
-  id: "TRX-9A82KD",
-  invoice: "INV-20260205-0001",
-  status: "completed", // completed | refunded | voided
-  datetime: "05 Feb 2026 · 14:32",
-  outlet: "Main Outlet",
-  cashier: "Andi",
-  subtotal: 120000,
-  discount: 10000,
-  tax: 11000,
-  service: 0,
-  total: 121000,
-  payment: {
-    method: "Cash",
-    paid: 150000,
-    change: 29000,
-    reference: null,
-  },
-}
-
-const items = [
-  {
-    id: 1,
-    name: "Paket Hemat Ayam",
-    type: "combo",
-    quantity: 1,
-    price: 45000,
-    subtotal: 45000,
-    comboItems: [
-      { name: "Ayam Goreng", qty: 1 },
-      { name: "Nasi Putih", qty: 1 },
-      { name: "Es Teh", qty: 1 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Nasi Goreng Spesial",
-    type: "product",
-    quantity: 2,
-    price: 25000,
-    subtotal: 50000,
-  },
-]
-
-const inventoryImpact = [
-  {
-    product: "Ayam Goreng",
-    before: 20,
-    change: -1,
-    after: 19,
-  },
-  {
-    product: "Nasi Goreng Spesial",
-    before: 15,
-    change: -2,
-    after: 13,
-  },
-]
-
-const notes = {
-  transaction_note: "No spicy, extra sambal",
-  admin_note: "Customer requested mild taste",
-}
-
-const auditLogs = [
-  {
-    action: "Created",
-    by: "Andi",
-    time: "05 Feb 2026 · 14:32",
-  },
-]
-
-/* ================= PAGE ================= */
+import { Badge } from "@/components/ui/Badge"
+import { PageHeader } from "@/components/dashboard/PageHeader"
+import { transactionService } from "@/lib/api/transaction"
+import { Transaction } from "@/types/transaction"
+import { ArrowLeft, Edit, Trash2, Printer } from "lucide-react"
+import Link from "next/link"
 
 export default function TransactionDetailPage() {
+  const params = useParams()
+  const transactionId = params.id as string
+  const [transaction, setTransaction] = useState<Transaction | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (transactionId) {
+      fetchTransaction()
+    }
+  }, [transactionId])
+
+  const fetchTransaction = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await transactionService.getTransaction(
+        parseInt(transactionId),
+      )
+      setTransaction(response.data)
+    } catch (err) {
+      setError("Failed to fetch transaction")
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVoidTransaction = async () => {
+    if (
+      !transaction ||
+      !confirm("Are you sure you want to void this transaction?")
+    ) {
+      return
+    }
+
+    try {
+      const reason = prompt(
+        "Please enter a reason for voiding this transaction:",
+      )
+      if (!reason) return
+
+      await transactionService.voidTransaction(transaction.id, reason)
+      await fetchTransaction() // Refresh the data
+    } catch (err) {
+      console.error("Failed to void transaction:", err)
+      alert("Failed to void transaction")
+    }
+  }
+
+  const handleRefundTransaction = async () => {
+    if (
+      !transaction ||
+      !confirm("Are you sure you want to refund this transaction?")
+    ) {
+      return
+    }
+
+    try {
+      const refundAmount = prompt(
+        "Enter refund amount:",
+        transaction.final_amount.toString(),
+      )
+      if (!refundAmount) return
+
+      const refundReason = prompt(
+        "Please enter a reason for refunding this transaction:",
+      )
+      if (!refundReason) return
+
+      await transactionService.refundTransaction(transaction.id, {
+        refund_amount: parseFloat(refundAmount),
+        refund_reason: refundReason,
+      })
+      await fetchTransaction() // Refresh the data
+    } catch (err) {
+      console.error("Failed to refund transaction:", err)
+      alert("Failed to refund transaction")
+    }
+  }
+
+  const handlePrintReceipt = async () => {
+    if (!transaction) return
+
+    try {
+      const receipt = await transactionService.generateReceipt(transaction.id)
+      // In a real app, this would open a print dialog or show a receipt preview
+      window.print()
+    } catch (err) {
+      console.error("Failed to generate receipt:", err)
+      alert("Failed to generate receipt")
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div>Loading transaction details...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">{error}</div>
+      </div>
+    )
+  }
+
+  if (!transaction) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div>Transaction not found</div>
+      </div>
+    )
+  }
+
+  const statusVariant = transaction.is_void
+    ? "destructive"
+    : transaction.is_refund
+      ? "secondary"
+      : transaction.status === "completed"
+        ? "default"
+        : "outline"
+
+  const statusText = transaction.is_void
+    ? "Voided"
+    : transaction.is_refund
+      ? "Refunded"
+      : transaction.status
+
   return (
     <div className="space-y-6">
-      {/* ================= HEADER ================= */}
       <PageHeader
-        title="Transaction Detail"
-        description={`Transaction ID ${transaction.id}`}
+        title={`Transaction #${transaction.invoice_number}`}
+        description="View transaction details"
         rightSlot={
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Printer className="w-4 h-4 mr-2" />
-              Reprint
+            <Button variant="outline" size="sm" onClick={handlePrintReceipt}>
+              <Printer className="h-4 w-4 mr-2" />
+              Print Receipt
             </Button>
-            <Button variant="outline">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Refund
-            </Button>
-            <Button variant="danger">
-              <Ban className="w-4 h-4 mr-2" />
-              Void
-            </Button>
+            {!transaction.is_void && !transaction.is_refund && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleVoidTransaction}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Void
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefundTransaction}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Refund
+                </Button>
+              </>
+            )}
+            <Link href="/transactions">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Transactions
+              </Button>
+            </Link>
           </div>
         }
       />
 
-      {/* ================= CONTEXT ================= */}
-      <section className="bg-white rounded-card border border-border p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Meta label="Transaction ID" value={transaction.id} copyable />
-        <Meta label="Status" value={transaction.status.toUpperCase()} />
-        <Meta label="Date & Time" value={transaction.datetime} />
-        <Meta label="Outlet" value={transaction.outlet} />
-        <Meta label="Cashier" value={transaction.cashier} />
-        <Meta label="Invoice" value={transaction.invoice} />
-      </section>
-
-      {/* ================= SUMMARY ================= */}
-      <section className="bg-white rounded-card border border-border p-6 space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Receipt className="w-5 h-5" /> Transaction Summary
-        </h3>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Stat label="Subtotal" value={rupiah(transaction.subtotal)} />
-          <Stat label="Discount" value={`- ${rupiah(transaction.discount)}`} />
-          <Stat label="Tax" value={rupiah(transaction.tax)} />
-          <Stat label="Service" value={rupiah(transaction.service)} />
-          <Stat label="Total Paid" value={rupiah(transaction.total)} strong />
-          <Stat label="Payment Method" value={transaction.payment.method} />
-          {transaction.payment.method === "Cash" && (
-            <>
-              <Stat
-                label="Paid Amount"
-                value={rupiah(transaction.payment.paid)}
-              />
-              <Stat label="Change" value={rupiah(transaction.payment.change)} />
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* ================= ITEMS SOLD ================= */}
-      <section className="bg-white rounded-card border border-border p-6 space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Package className="w-5 h-5" /> Items Sold
-        </h3>
-
-        <div className="divide-y divide-border">
-          {items.map((item) => (
-            <div key={item.id} className="py-4 space-y-2">
-              <div className="grid grid-cols-12 gap-4 items-center">
-                <div className="col-span-5">
-                  <p className="font-medium">{item.name}</p>
-                  <span className="text-xs text-gray-500 uppercase">
-                    {item.type}
-                  </span>
-                </div>
-                <div className="col-span-2 text-center">{item.quantity}×</div>
-                <div className="col-span-2 text-right">
-                  {rupiah(item.price)}
-                </div>
-                <div className="col-span-3 text-right font-semibold">
-                  {rupiah(item.subtotal)}
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              Transaction Information
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Invoice Number:</span>
+                <span className="font-medium">
+                  {transaction.invoice_number}
+                </span>
               </div>
-
-              {/* COMBO EXPANSION */}
-              {item.type === "combo" && item.comboItems && (
-                <div className="ml-4 bg-muted rounded-card p-3 space-y-1">
-                  {item.comboItems.map((c, i) => (
-                    <p
-                      key={i}
-                      className="text-sm text-gray-600 flex justify-between"
-                    >
-                      <span>{c.name}</span>
-                      <span>{c.qty}×</span>
-                    </p>
-                  ))}
+              <div className="flex justify-between">
+                <span className="text-gray-500">Date:</span>
+                <span>{new Date(transaction.created_at).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Status:</span>
+                <Badge variant={statusVariant}>{statusText}</Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Payment Method:</span>
+                <span>{transaction.payment_method}</span>
+              </div>
+              {transaction.payment_reference && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Payment Reference:</span>
+                  <span>{transaction.payment_reference}</span>
                 </div>
               )}
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ================= NOTES & METADATA ================= */}
-      <section className="bg-white rounded-card border border-border p-6 space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Notebook className="w-5 h-5" /> Notes & Metadata
-        </h3>
-
-        {notes.transaction_note && (
-          <div className="bg-muted rounded-card p-4">
-            <p className="text-sm text-gray-500">Transaction Note</p>
-            <p className="font-medium text-foreground">
-              {notes.transaction_note}
-            </p>
           </div>
-        )}
+        </Card>
 
-        {notes.admin_note && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-card p-4">
-            <p className="text-sm text-yellow-700">Internal Admin Note</p>
-            <p className="font-medium text-yellow-900">{notes.admin_note}</p>
-          </div>
-        )}
-      </section>
-
-      {/* ================= INVENTORY IMPACT ================= */}
-      <section className="bg-white rounded-card border border-border p-6 space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Warehouse className="w-5 h-5" /> Inventory Impact
-        </h3>
-
-        <div className="divide-y divide-border">
-          {inventoryImpact.map((row, i) => (
-            <div key={i} className="py-3 grid grid-cols-4 text-sm">
-              <span>{row.product}</span>
-              <span>{row.before}</span>
-              <span className="text-red-600">{row.change}</span>
-              <span>{row.after}</span>
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Amount Details</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Subtotal:</span>
+                <span>Rp {transaction.subtotal.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Discount:</span>
+                <span>
+                  Rp {transaction.discount_amount.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tax:</span>
+                <span>Rp {transaction.tax_amount.toLocaleString("id-ID")}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Service Charge:</span>
+                <span>
+                  Rp {transaction.service_charge_amount.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Total:</span>
+                <span>
+                  Rp {transaction.total_amount.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <div className="flex justify-between font-semibold text-lg">
+                <span>Final Amount:</span>
+                <span>
+                  Rp {transaction.final_amount.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Paid Amount:</span>
+                <span>
+                  Rp {transaction.paid_amount.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Change:</span>
+                <span>
+                  Rp {transaction.change_amount.toLocaleString("id-ID")}
+                </span>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ================= AUDIT TRAIL ================= */}
-      <section className="bg-white rounded-card border border-border p-6 space-y-3">
-        <h3 className="text-lg font-semibold">Audit Trail</h3>
-        {auditLogs.map((log, i) => (
-          <div key={i} className="text-sm text-gray-600">
-            {log.action} by <strong>{log.by}</strong> · {log.time}
           </div>
-        ))}
-      </section>
-    </div>
-  )
-}
-
-/* ================= COMPONENTS ================= */
-
-function Meta({
-  label,
-  value,
-  copyable,
-}: {
-  label: string
-  value: string
-  copyable?: boolean
-}) {
-  return (
-    <div>
-      <p className="text-xs text-gray-500">{label}</p>
-      <div className="flex items-center gap-2">
-        <p className="font-medium">{value}</p>
-        {copyable && <Copy className="w-4 h-4 text-gray-400" />}
+        </Card>
       </div>
+
+      {transaction.notes && (
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-2">Notes</h3>
+            <p className="text-gray-600">{transaction.notes}</p>
+          </div>
+        </Card>
+      )}
+
+      {transaction.void_reason && (
+        <Card className="bg-red-50 border-red-200">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-2 text-red-700">
+              Void Reason
+            </h3>
+            <p className="text-red-600">{transaction.void_reason}</p>
+          </div>
+        </Card>
+      )}
+
+      {transaction.refund_reason && (
+        <Card className="bg-yellow-50 border-yellow-200">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-2 text-yellow-700">
+              Refund Reason
+            </h3>
+            <p className="text-yellow-600">{transaction.refund_reason}</p>
+          </div>
+        </Card>
+      )}
     </div>
   )
-}
-
-function Stat({
-  label,
-  value,
-  strong,
-}: {
-  label: string
-  value: string
-  strong?: boolean
-}) {
-  return (
-    <div className="bg-muted rounded-card p-4">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p
-        className={`${strong ? "text-xl font-bold" : "text-lg font-semibold"}`}
-      >
-        {value}
-      </p>
-    </div>
-  )
-}
-
-function rupiah(v: number) {
-  return `Rp ${v.toLocaleString("id-ID")}`
 }

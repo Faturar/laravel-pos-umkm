@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation"
 interface DataTableProps<T> {
   columns: {
     header: string
-    accessorKey: keyof T
+    accessorKey: keyof T | string
+    id?: string
     cell?: (row: T) => React.ReactNode
   }[]
   data: T[]
@@ -15,9 +16,15 @@ interface DataTableProps<T> {
     total: number
     total_pages: number
   }
+  customFilters?: React.ReactNode
 }
 
-export function DataTable<T>({ columns, data, meta }: DataTableProps<T>) {
+export function DataTable<T>({
+  columns,
+  data,
+  meta,
+  customFilters,
+}: DataTableProps<T>) {
   const router = useRouter()
   const params = useSearchParams()
 
@@ -59,6 +66,7 @@ export function DataTable<T>({ columns, data, meta }: DataTableProps<T>) {
         </div>
 
         <div className="space-x-4">
+          {customFilters}
           <select
             title="status"
             defaultValue={params.get("status") ?? "all"}
@@ -91,9 +99,9 @@ export function DataTable<T>({ columns, data, meta }: DataTableProps<T>) {
         <table className="w-full">
           <thead className="bg-muted">
             <tr>
-              {columns.map((col) => (
+              {columns.map((col, index) => (
                 <th
-                  key={String(col.accessorKey)}
+                  key={col.id || `col-${index}`}
                   className="px-6 py-4 text-left text-sm text-gray-500"
                 >
                   {col.header}
@@ -105,9 +113,13 @@ export function DataTable<T>({ columns, data, meta }: DataTableProps<T>) {
           <tbody>
             {data.map((row, i) => (
               <tr key={i} className="border-b border-gray-100">
-                {columns.map((col) => (
-                  <td key={String(col.accessorKey)} className="px-6 py-4">
-                    {col.cell ? col.cell(row) : String(row[col.accessorKey])}
+                {columns.map((col, index) => (
+                  <td key={col.id || `col-${index}`} className="px-6 py-4">
+                    {col.cell
+                      ? col.cell(row)
+                      : typeof col.accessorKey === "string"
+                        ? null
+                        : String(row[col.accessorKey as keyof T])}
                   </td>
                 ))}
               </tr>

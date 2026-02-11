@@ -15,6 +15,9 @@ import {
   X,
   Store,
   Package,
+  TrendingUp,
+  BarChart3,
+  Activity,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -29,7 +32,8 @@ const menu = [
     items: [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { label: "Transactions", href: "/transactions", icon: Receipt },
-      { label: "Reports", href: "/reports", icon: Database },
+      { label: "Customers", href: "/customers", icon: Users },
+      { label: "Outlets", href: "/outlets", icon: Store },
     ],
   },
   {
@@ -37,14 +41,32 @@ const menu = [
     items: [
       { label: "Categories", href: "/products/categories", icon: Tags },
       { label: "Products", href: "/products", icon: Boxes },
+      { label: "Product Variants", href: "/products/variants", icon: Package },
       { label: "Combos", href: "/combos", icon: Package },
       { label: "Inventory", href: "/inventory", icon: Database },
+      { label: "Stock Movement", href: "/stock-movement", icon: TrendingUp },
+    ],
+  },
+  {
+    title: "Laporan",
+    items: [
+      { label: "Sales Report", href: "/reports/sales", icon: BarChart3 },
+      { label: "Product Report", href: "/reports/products", icon: Boxes },
+      { label: "Payment Report", href: "/reports/payments", icon: Wallet },
+      { label: "Cash Report", href: "/reports/cash", icon: TrendingUp },
+      { label: "Inventory Report", href: "/reports/inventory", icon: Database },
+      { label: "Combo Report", href: "/reports/combos", icon: Package },
     ],
   },
   {
     title: "Keuangan",
     items: [
-      { label: "Payment Methods", href: "/finance/payments", icon: Wallet },
+      { label: "Payment", href: "/finance/payments", icon: Wallet },
+      {
+        label: "Payment Methods",
+        href: "/finance/payment-methods",
+        icon: Wallet,
+      },
       { label: "Cash Flow", href: "/finance/cashflow", icon: Wallet },
     ],
   },
@@ -53,7 +75,21 @@ const menu = [
     items: [
       { label: "Users", href: "/users", icon: Users },
       { label: "Roles", href: "/roles", icon: ShieldCheck },
+      { label: "Permissions", href: "/permissions", icon: ShieldCheck },
       { label: "Store Settings", href: "/settings", icon: Settings },
+      { label: "POS Settings", href: "/settings/pos", icon: Settings },
+    ],
+  },
+  {
+    title: "System",
+    items: [
+      { label: "Audit Log", href: "/system/audit-log", icon: BarChart3 },
+      { label: "Sync Status", href: "/system/sync-status", icon: Activity },
+      {
+        label: "Offline Sync",
+        href: "/system/offline-sync",
+        icon: Activity,
+      },
     ],
   },
 ]
@@ -85,6 +121,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         <button
           onClick={onClose}
           className="lg:hidden size-11 rounded-xl ring-1 ring-border hover:ring-primary transition"
+          aria-label="Close sidebar"
         >
           <X className="size-6 text-gray-500 mx-auto" />
         </button>

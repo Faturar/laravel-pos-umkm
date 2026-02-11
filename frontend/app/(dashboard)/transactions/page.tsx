@@ -1,163 +1,146 @@
-import { transactionColumns } from "./columns"
+"use client"
 
-import { PageHeader } from "@/components/dashboard/PageHeader"
-import { Button } from "@/components/ui/Button"
+import { useState, useEffect } from "react"
 import { DataTable } from "@/components/ui/DataTable"
+import { Card } from "@/components/ui/Card"
+import { Button } from "@/components/ui/Button"
+import { PageHeader } from "@/components/dashboard/PageHeader"
+import { getTransactionColumns } from "./columns"
+import { transactionService } from "@/lib/api/transaction"
 import { Transaction } from "@/types/transaction"
-import { Plus } from "lucide-react"
+import { Plus, Search, Filter } from "lucide-react"
+import Link from "next/link"
 
-interface TransactionsPageProps {
-  searchParams: {
-    page?: string
-    search?: string
-    status?: string
-    payment_method?: string
+export default function TransactionsPage() {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchTransactions()
+  }, [])
+
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await transactionService.getTransactions()
+      setTransactions(response.data || [])
+    } catch (err) {
+      setError("Failed to fetch transactions")
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
-export default async function TransactionsPage({
-  searchParams,
-}: TransactionsPageProps) {
-  const page = Number(searchParams.page ?? 1)
-  const search = (searchParams.search ?? "").toLowerCase()
-  const status = searchParams.status ?? "all"
-  const paymentMethod = searchParams.payment_method ?? "all"
+  const handleViewTransaction = (transaction: Transaction) => {
+    // This will be implemented when we create the detail page
+    console.log("View transaction:", transaction)
+  }
 
-  // 🔥 DUMMY DATA SOURCE
-  const allTransactions: Transaction[] = [
-    {
-      id: 1,
-      uuid: "550e8400-e29b-41d4-a716-446655440000",
-      invoice_number: "INV-202402050001",
-      subtotal: 120000,
-      discount_amount: 0,
-      tax_amount: 12000,
-      service_charge_amount: 0,
-      total_amount: 132000,
-      final_amount: 132000,
-      paid_amount: 150000,
-      change_amount: 18000,
-      payment_method: "cash",
-      payment_reference: undefined,
-      notes: "Customer requested extra sugar",
-      status: "completed",
-      is_void: false,
-      is_refund: false,
-      void_reason: undefined,
-      refund_reason: undefined,
-      is_synced: true,
-      cashier_id: 1,
-      customer_id: 1,
-      outlet_id: 1,
-      created_at: "2024-02-05T10:30:00.000000Z",
-      updated_at: "2024-02-05T10:30:00.000000Z",
-      deleted_at: undefined,
-    },
-    {
-      id: 2,
-      uuid: "550e8400-e29b-41d4-a716-446655440001",
-      invoice_number: "INV-202402050002",
-      subtotal: 90000,
-      discount_amount: 5000,
-      tax_amount: 8500,
-      service_charge_amount: 0,
-      total_amount: 93500,
-      final_amount: 93500,
-      paid_amount: 100000,
-      change_amount: 6500,
-      payment_method: "card",
-      payment_reference: "CARD-123456789",
-      notes: undefined,
-      status: "completed",
-      is_void: false,
-      is_refund: false,
-      void_reason: undefined,
-      refund_reason: undefined,
-      is_synced: true,
-      cashier_id: 1,
-      customer_id: undefined,
-      outlet_id: 1,
-      created_at: "2024-02-05T11:15:00.000000Z",
-      updated_at: "2024-02-05T11:15:00.000000Z",
-      deleted_at: undefined,
-    },
-    {
-      id: 3,
-      uuid: "550e8400-e29b-41d4-a716-446655440002",
-      invoice_number: "INV-202402050003",
-      subtotal: 35000,
-      discount_amount: 0,
-      tax_amount: 3500,
-      service_charge_amount: 0,
-      total_amount: 38500,
-      final_amount: 38500,
-      paid_amount: 50000,
-      change_amount: 11500,
-      payment_method: "ewallet",
-      payment_reference: "EWL-987654321",
-      notes: undefined,
-      status: "voided",
-      is_void: true,
-      is_refund: false,
-      void_reason: "Customer request",
-      refund_reason: undefined,
-      is_synced: true,
-      cashier_id: 2,
-      customer_id: 2,
-      outlet_id: 1,
-      created_at: "2024-02-05T12:45:00.000000Z",
-      updated_at: "2024-02-05T12:50:00.000000Z",
-      deleted_at: undefined,
-    },
-  ]
+  const handleEditTransaction = (transaction: Transaction) => {
+    // This will be implemented when we create the edit page
+    console.log("Edit transaction:", transaction)
+  }
 
-  // 🔎 FILTERING (same logic as backend)
-  const filtered = allTransactions.filter((t) => {
-    const matchSearch =
-      t.invoice_number.toLowerCase().includes(search) ||
-      (t.payment_reference &&
-        t.payment_reference.toLowerCase().includes(search))
+  const handleVoidTransaction = async (transaction: Transaction) => {
+    if (!confirm("Are you sure you want to void this transaction?")) {
+      return
+    }
 
-    const matchStatus =
-      status === "all" ||
-      (status === "completed" && t.status === "completed") ||
-      (status === "voided" && t.status === "voided") ||
-      (status === "refunded" && t.status === "refunded")
+    try {
+      const reason = prompt(
+        "Please enter a reason for voiding this transaction:",
+      )
+      if (!reason) return
 
-    const matchPaymentMethod =
-      paymentMethod === "all" || t.payment_method === paymentMethod
+      await transactionService.voidTransaction(transaction.id, reason)
+      await fetchTransactions() // Refresh the list
+    } catch (err) {
+      console.error("Failed to void transaction:", err)
+      alert("Failed to void transaction")
+    }
+  }
 
-    return matchSearch && matchStatus && matchPaymentMethod
+  const handleRefundTransaction = async (transaction: Transaction) => {
+    if (!confirm("Are you sure you want to refund this transaction?")) {
+      return
+    }
+
+    try {
+      const refundAmount = prompt(
+        "Enter refund amount:",
+        transaction.final_amount.toString(),
+      )
+      if (!refundAmount) return
+
+      const refundReason = prompt(
+        "Please enter a reason for refunding this transaction:",
+      )
+      if (!refundReason) return
+
+      await transactionService.refundTransaction(transaction.id, {
+        refund_amount: parseFloat(refundAmount),
+        refund_reason: refundReason,
+      })
+      await fetchTransactions() // Refresh the list
+    } catch (err) {
+      console.error("Failed to refund transaction:", err)
+      alert("Failed to refund transaction")
+    }
+  }
+
+  const columns = getTransactionColumns({
+    onView: handleViewTransaction,
+    onEdit: handleEditTransaction,
+    onVoid: handleVoidTransaction,
+    onRefund: handleRefundTransaction,
   })
-
-  // 📄 PAGINATION
-  const perPage = 10
-  const total = filtered.length
-  const totalPages = Math.ceil(total / perPage)
-
-  const items = filtered.slice((page - 1) * perPage, page * perPage)
-
-  const meta = {
-    page,
-    per_page: perPage,
-    total,
-    total_pages: totalPages,
-  }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Transactions"
-        description="Manage sales transactions and payment records"
+        description="Manage and view all transactions"
         rightSlot={
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            New Transaction
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+            <Button variant="outline" size="sm">
+              <Search className="h-4 w-4 mr-2" />
+              Search
+            </Button>
+            <Link href="/transactions/create">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Transaction
+              </Button>
+            </Link>
+          </div>
         }
       />
 
-      <DataTable columns={transactionColumns} data={items} meta={meta} />
+      {error && (
+        <Card className="bg-red-50 border-red-200">
+          <div className="text-red-700">{error}</div>
+        </Card>
+      )}
+
+      <Card>
+        <DataTable
+          columns={columns}
+          data={transactions}
+          meta={{
+            page: 1,
+            per_page: 10,
+            total: transactions.length,
+            total_pages: Math.ceil(transactions.length / 10),
+          }}
+        />
+      </Card>
     </div>
   )
 }

@@ -26,3 +26,34 @@ export interface Transaction {
   updated_at: string
   deleted_at?: string | null
 }
+
+export interface TransactionItem {
+  id: number
+  transaction_id: number
+  product_id: number
+  product_variant_id?: number
+  quantity: number
+  price: number
+  discount_amount: number
+  tax_amount: number
+  total_amount: number
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface TransactionFormData {
+  customer_id?: number
+  outlet_id: number
+  items: Omit<
+    TransactionItem,
+    "id" | "transaction_id" | "created_at" | "updated_at"
+  >[]
+  discount_amount?: number
+  tax_amount?: number
+  service_charge_amount?: number
+  paid_amount: number
+  payment_method: string
+  payment_reference?: string
+  notes?: string
+}
